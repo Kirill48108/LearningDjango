@@ -11,7 +11,13 @@ django = "^5.2.7"
 djangorestframework = "^3.16.1"
 python-dotenv = "^1.2.1"
 load-dotenv = "^0.1.0"
+psycopg2-binary = "^2.9.11"
+pillow = "^12.0.0"
 
+
+[tool.poetry.group.lint.dependencies]
+black = "^25.9.0"
+isort = "^7.0.0"
 
 [build-system]
 requires = ["poetry-core"]
