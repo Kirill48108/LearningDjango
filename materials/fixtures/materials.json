@@ -1,0 +1,22 @@
+[
+  {
+    "model": "materials.well",
+    "pk": 1,
+    "fields": {
+      "name": "Курс 1",
+      "preview": null,
+      "description": "Базовый курс для тестовых данных"
+    }
+  },
+  {
+    "model": "materials.lesson",
+    "pk": 1,
+    "fields": {
+      "course": 1,
+      "title": "Урок 1",
+      "description": "Вводный урок",
+      "preview_img": null,
+      "video_url": null
+    }
+  }
+]

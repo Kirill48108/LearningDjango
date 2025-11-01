@@ -1,5 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+from materials.models import Lesson, Well
 
 
 class User(AbstractUser):
@@ -37,3 +40,60 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
+
+class Payment(models.Model):
+    class PaymentMethod(models.TextChoices):
+        CASH = "cash", "Наличные"
+        BANK_TRANSFER = "bank", "Перевод на счёт"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="payments",
+        verbose_name="Пользователь",
+        help_text="Пользователь совершивший оплату",
+    )
+    paid_at = models.DateTimeField(
+        verbose_name="Дата оплаты",
+        help_text="Двтв и время совершения оплаты",
+        auto_now_add=False,
+    )
+    course = models.ForeignKey(
+        Well,
+        on_delete=models.SET_NULL,
+        related_name="payments",
+        blank=True,
+        null=True,
+        verbose_name="Оплаченный курс",
+        help_text="Ссылка на курс,усли оплачивался курс",
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.SET_NULL,
+        related_name="payments",
+        blank=True,
+        null=True,
+        verbose_name="Оплаченный урок",
+        help_text="Ссылка на урок,если оплачивался отдельный урок",
+    )
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Сумма оплаты",
+        help_text="Сумма платежа",
+    )
+    payment_method = models.CharField(
+        max_length=10,
+        choices=PaymentMethod.choices,
+        verbose_name="Способ оплаты",
+        help_text="Налмчные или перевод на счёт",
+    )
+
+    class Meta:
+        verbose_name = "Платеж"
+        verbose_name_plural = "Платежи"
+
+    def __str__(self) -> str:
+        target = self.course or self.lesson
+        return f"{self.user} -> {target} -> [{self.amount}] {self.paid_at}"
