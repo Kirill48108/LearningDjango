@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class Well(models.Model):
@@ -18,6 +19,14 @@ class Well(models.Model):
         max_length=500,
         verbose_name="Описание курса",
         help_text="Введите описание курса (до 500 символов)",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="courses",
+        verbose_name="Владелец курса",
+        null=True,
+        blank=True,
     )
 
     class Meta:
@@ -54,7 +63,19 @@ class Lesson(models.Model):
         verbose_name="Ссылка на видео",
         help_text="Введите URL-адрес видео для урока (необязательно).",
     )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="lessons",
+        verbose_name="Владелец урока",
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
+
+
+
+
