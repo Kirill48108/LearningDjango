@@ -1,6 +1,14 @@
+from xml.dom.domreg import well_known_implementations
+
 from rest_framework import serializers
 
 from materials.models import Lesson, Well
+
+
+class LessonShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lesson
+        fields = ("id", "title")
 
 
 class WellSerializer(serializers.ModelSerializer):
