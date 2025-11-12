@@ -139,8 +139,11 @@ SPECTACULAR_SETTINGS = {
 
 STRIPE_API_KEY = os.getenv("STRIPE_API_KEY")
 STRIPE_CURRENCY = "rub"
-STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL", "http://localhost:8000/success")
-STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL", "http://localhost:8000/cancel")
+STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL")
+STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL")
+
+
+
 
 
 

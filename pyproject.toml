@@ -16,6 +16,8 @@ django-filter = "==25.2"
 djangorestframework-simplejwt = "==5.3.1"
 drf-spectacular = "==0.27.2"
 stripe = "==10.2.0"
+celery = "==5.4.0"
+redis = "==5.0.1"
 
 [tool.poetry.group.lint.dependencies]
 black = "==25.9.0"
