@@ -4,6 +4,7 @@ from .views import (
     WellRetrieveUpdateDestroyAPIView,
     LessonListCreateAPIView,
     LessonRetrieveUpdateDestroyAPIView,
+    SubscriptionToggleAPIView,
 )
 
 app_name = "materials"
@@ -15,4 +16,6 @@ urlpatterns = [
     # Уроки
     path("lessons/", LessonListCreateAPIView.as_view(), name="lesson-list-create"),
     path("lessons/<int:pk>/", LessonRetrieveUpdateDestroyAPIView.as_view(), name="lesson-detail"),
+    # Подписка toggle
+    path("wells/subscribe/", SubscriptionToggleAPIView.as_view(), name="subscription-toggle"),
 ]
