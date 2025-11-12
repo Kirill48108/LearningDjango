@@ -3,6 +3,8 @@ from rest_framework import viewsets, permissions
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.response import Response
+from rest_framework import status
 
 from .serializers import (
     RegistrationSerializer,
@@ -40,6 +42,9 @@ class UserViewSet(viewsets.ModelViewSet):
                 return UserPrivateSerializer
             return UserPublicSerializer
         return UserPublicSerializer
+
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class PaymentListAPIView(ListAPIView):
