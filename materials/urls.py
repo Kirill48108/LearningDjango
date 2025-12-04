@@ -1,29 +1,18 @@
 from django.urls import path
-from rest_framework.routers import SimpleRouter
+from .views import (
+    WellListCreateAPIView,
+    WellRetrieveUpdateDestroyAPIView,
+    LessonListCreateAPIView,
+    LessonRetrieveUpdateDestroyAPIView,
+)
 
-from materials.apps import MaterialsConfig
-from materials.views import (LessonCreateAPIView, LessonDestroyAPIView,
-                             LessonListAPIView, LessonRetrieveAPIView,
-                             LessonUpdateAPIView, WellViewSet)
-
-app_name = MaterialsConfig.name
-
-router = SimpleRouter()
-router.register("", WellViewSet)
-
+app_name = "materials"
 
 urlpatterns = [
-    path("lessons/", LessonListAPIView.as_view(), name="lessons_list"),
-    path("lessons/<int:pk>/", LessonRetrieveAPIView.as_view(), name="lessons_retrieve"),
-    path(
-        "lessons/<int:pk>/update/", LessonUpdateAPIView.as_view(), name="lessons_update"
-    ),
-    path(
-        "lessons/<int:pk>/destroy/",
-        LessonDestroyAPIView.as_view(),
-        name="lessons_destroy",
-    ),
-    path("lessons/create/", LessonCreateAPIView.as_view(), name="lessons_create"),
+    # Курсы
+    path("wells/", WellListCreateAPIView.as_view(), name="well-list-create"),
+    path("wells/<int:pk>/", WellRetrieveUpdateDestroyAPIView.as_view(), name="well-detail"),
+    # Уроки
+    path("lessons/", LessonListCreateAPIView.as_view(), name="lesson-list-create"),
+    path("lessons/<int:pk>/", LessonRetrieveUpdateDestroyAPIView.as_view(), name="lesson-detail"),
 ]
-
-urlpatterns += router.urls
