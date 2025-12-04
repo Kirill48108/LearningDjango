@@ -1,8 +1,9 @@
-from xml.dom.domreg import well_known_implementations
-
 from rest_framework import serializers
 
 from materials.models import Lesson, Well
+from materials.validators import YouTubeOnlyValidator
+from materials.models import Subscription
+
 
 
 class LessonShortSerializer(serializers.ModelSerializer):
@@ -13,7 +14,8 @@ class LessonShortSerializer(serializers.ModelSerializer):
 
 class WellSerializer(serializers.ModelSerializer):
     lessons_count = serializers.SerializerMethodField()
-    lessons = serializers.SerializerMethodField
+    lessons = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Well
@@ -24,10 +26,19 @@ class WellSerializer(serializers.ModelSerializer):
 
     def get_lessons(self, obj: Well):
         lessons_qs = obj.lessons.all()
-        return LessonSerializer(lessons_qs, many=True, context=self.context).data
+        return LessonShortSerializer(lessons_qs, many=True, context=self.context).data
+
+    def get_is_subscribed(self, obj: Well) -> bool:
+        request = self.context.get("request")
+        if not request or not request.user or not request.user.is_authenticated:
+            return False
+        from materials.models import Subscription
+        return Subscription.objects.filter(user=request.user, course=obj).exists()
+
 
 
 class LessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = "__all__"
+        validators = [YouTubeOnlyValidator(field="video_url")]
