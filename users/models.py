@@ -1,9 +1,7 @@
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
-from materials.models import Lesson, Well
-
+from django.conf import settings
+from materials.models import Well, Lesson
 
 class User(AbstractUser):
 
@@ -40,6 +38,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
+
 
 
 class Payment(models.Model):
@@ -87,8 +86,14 @@ class Payment(models.Model):
         max_length=10,
         choices=PaymentMethod.choices,
         verbose_name="Способ оплаты",
-        help_text="Налмчные или перевод на счёт",
+        help_text="Налмчные или перевод на счёт"
     )
+    # --- Stripe служебные поля ---
+    stripe_product_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_price_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_session_id = models.CharField(max_length=100, blank=True, null=True)
+    checkout_url = models.URLField(blank=True, null=True)
+    status = models.CharField(max_length=32, blank=True, null=True, help_text="Статус платежной сессии (optional)")
 
     class Meta:
         verbose_name = "Платеж"
@@ -97,3 +102,4 @@ class Payment(models.Model):
     def __str__(self) -> str:
         target = self.course or self.lesson
         return f"{self.user} -> {target} -> [{self.amount}] {self.paid_at}"
+

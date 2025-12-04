@@ -67,3 +67,34 @@ class PaymentSerializer(serializers.ModelSerializer):
             "course_name",
             "lesson_title",
         )
+
+    def validate(self, attrs):
+        course = attrs.get("course")
+        lesson = attrs.get("lesson")
+        if not course and not lesson:
+            raise serializers.ValidationError("Нужно указать либо course, либо lesson.")
+        if course and lesson:
+            raise serializers.ValidationError("Укажите только один объект оплаты: course или lesson.")
+        return attrs
+
+
+class PaymentCreateSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для создания локальной записи платежа,
+    после чего создаётся product/price/session в Stripe.
+    Требует указать РОВНО одно из полей: course ИЛИ lesson.
+    """
+    class Meta:
+        model = Payment
+        fields = ("id", "user", "paid_at", "course", "lesson", "amount", "payment_method")
+        read_only_fields = ("user",)
+
+    def validate(self, attrs):
+        course = attrs.get("course")
+        lesson = attrs.get("lesson")
+        if not course and not lesson:
+            raise serializers.ValidationError("Укажите либо course, либо lesson.")
+        if course and lesson:
+            raise serializers.ValidationError("Укажите только один объект оплаты: course ИЛИ lesson.")
+        return attrs
+
