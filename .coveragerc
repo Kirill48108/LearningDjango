@@ -1,0 +1,22 @@
+# ini
+[run]
+branch = True
+source =
+    materials
+    users
+    config
+omit =
+    */migrations/*
+    */tests.py
+    */__init__.py
+    manage.py
+    */venv/*
+    */.venv/*
+
+[report]
+skip_covered = False
+show_missing = True
+
+[html]
+directory = htmlcov
+title = LearningDjango coverage report
