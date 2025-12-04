@@ -28,6 +28,10 @@ class Well(models.Model):
         null=True,
         blank=True,
     )
+    # Метка последнего обновления самого курса
+    updated_at = models.DateTimeField(auto_now=True)
+    # Метка последней отправки уведомлений (для антиспама)
+    notified_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Курс"
@@ -97,6 +101,7 @@ class Subscription(models.Model):
         verbose_name_plural = "Подписки на курсы"
         unique_together = ("user", "course")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.user} -> {self.course}"
+
 

@@ -143,6 +143,24 @@ STRIPE_SUCCESS_URL = os.getenv("STRIPE_SUCCESS_URL")
 STRIPE_CANCEL_URL = os.getenv("STRIPE_CANCEL_URL")
 
 
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+
+# Celery/Redis
+CELERY_BROKER_URL = os.getenv("REDIS_URL")
+CELERY_RESULT_BACKEND = os.getenv("REDIS_URL")
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+
+# Планирование задач через celery-beat
+CELERY_BEAT_SCHEDULE = {
+    "deactivate-inactive-users-daily": {
+        "task": "users.tasks.deactivate_inactive_users",
+        "schedule": 24 * 60 * 60,  # раз в сутки
+        "options": {"expires": 60 * 60},
+    },
+}
 
 
 
