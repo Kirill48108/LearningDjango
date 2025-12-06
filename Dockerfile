@@ -36,6 +36,3 @@ COPY . .
 # Открываем порт (для Django / gunicorn)
 EXPOSE 8000
 
-# Команда по умолчанию — запуск Django через gunicorn
-# Замените "learningdjango.wsgi:application" на ваш wsgi-модуль, если имя другое
-CMD ["bash", "-c", "python manage.py migrate && gunicorn config.wsgi:application --bind 0.0.0.0:8000"]

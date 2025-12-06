@@ -49,9 +49,9 @@ services:
     image: postgres:16-alpine
     container_name: postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-learningdjango}
-      POSTGRES_USER: ${POSTGRES_USER:-django}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-django}
+      POSTGRES_DB: ${NAME:-learningdjango}
+      POSTGRES_USER: ${USER:-django}
+      POSTGRES_PASSWORD: ${PASSWORD:-django}
     ports:
       - "5432:5432"
     volumes:
