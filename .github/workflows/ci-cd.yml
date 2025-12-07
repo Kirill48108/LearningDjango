@@ -28,13 +28,12 @@ jobs:
           --health-retries=10
 
     env:
-      # Эти имена ДОЛЖНЫ совпадать с тем, что читает settings.DATABASES
+      # Эти имена совпадают с settings.DATABASES
       NAME: learningdjango
       USER: django
       PASSWORD: django
-      HOST: db
+      HOST: localhost      # <--- ВАЖНО: для CI здесь localhost, а не db
       PORT: "5432"
-      # для тестов используем ту же БД, чтобы Django не создавал test_<NAME>
       TEST_NAME: learningdjango
 
       DEBUG: "True"
