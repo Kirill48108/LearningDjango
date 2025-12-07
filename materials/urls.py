@@ -1,9 +1,12 @@
 from django.urls import path
 
-from .views import (LessonListCreateAPIView,
-                    LessonRetrieveUpdateDestroyAPIView,
-                    SubscriptionToggleAPIView, WellListCreateAPIView,
-                    WellRetrieveUpdateDestroyAPIView)
+from .views import (
+    LessonListCreateAPIView,
+    LessonRetrieveUpdateDestroyAPIView,
+    SubscriptionToggleAPIView,
+    WellListCreateAPIView,
+    WellRetrieveUpdateDestroyAPIView,
+)
 
 app_name = "materials"
 

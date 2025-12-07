@@ -1,8 +1,13 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .views import (PaymentCheckoutCreateAPIView, PaymentCheckoutStatusAPIView,
-                    PaymentListAPIView, RegistrationAPIView, UserViewSet)
+from .views import (
+    PaymentCheckoutCreateAPIView,
+    PaymentCheckoutStatusAPIView,
+    PaymentListAPIView,
+    RegistrationAPIView,
+    UserViewSet,
+)
 
 router = DefaultRouter()
 router.register(r"profiles", UserViewSet, basename="profiles")

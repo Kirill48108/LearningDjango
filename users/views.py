@@ -14,10 +14,13 @@ from .filters import PaymentFilter
 from .models import Payment
 from .paginators import PaymentsPagination
 from .permissions import IsSelfOrReadOnly
-from .serializers import \
-    PaymentCreateSerializer  # используем реальный сериализатор из serializers.py
-from .serializers import (PaymentSerializer, RegistrationSerializer,
-                          UserPrivateSerializer, UserPublicSerializer)
+from .serializers import (  # используем реальный сериализатор из serializers.py
+    PaymentCreateSerializer,
+    PaymentSerializer,
+    RegistrationSerializer,
+    UserPrivateSerializer,
+    UserPublicSerializer,
+)
 
 User = get_user_model()
 
