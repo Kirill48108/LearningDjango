@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - develop
+  pull_request: # <-- Запускает проверки при создании/обновлении PR
+    branches:
+      - develop
 
 jobs:
   lint-and-test:
@@ -35,10 +38,9 @@ jobs:
         run: |
           poetry run isort --check-only .
 
-      # Добавлен шаг для запуска Ruff
       - name: Run Ruff (check)
         run: |
-          poetry run ruff check --output-format=github . #
+          poetry run ruff check --output-format=github .
 
       - name: Run Django tests
         env:
@@ -51,7 +53,9 @@ jobs:
   deploy:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    # Это условие гарантирует, что деплой запустится только после фактического слияния в develop,
+    # а не во время проверки Pull Request'а
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
 
     steps:
       - name: Checkout repo
