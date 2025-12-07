@@ -16,25 +16,26 @@ jobs:
       db:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: learningdjango
+          # Служебная БД, Django сам создаст test_<NAME>
+          POSTGRES_DB: postgres
           POSTGRES_USER: django
           POSTGRES_PASSWORD: django
         ports:
           - "5432:5432"
         options: >-
-          --health-cmd="pg_isready -U django -d learningdjango"
+          --health-cmd="pg_isready -U django -d postgres"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=10
 
     env:
-      # Эти имена совпадают с settings.DATABASES
+      # Эти имена читает settings.DATABASES
       NAME: learningdjango
       USER: django
       PASSWORD: django
-      HOST: localhost      # <--- ВАЖНО: для CI здесь localhost, а не db
+      HOST: localhost      # код крутится на хосте раннера, не в docker-сети
       PORT: "5432"
-      TEST_NAME: learningdjango
+      # НЕ задаём TEST_NAME, чтобы Django создал test_learningdjango сам
 
       DEBUG: "True"
       SECRET_KEY: test_secret_key
@@ -69,10 +70,7 @@ jobs:
         run: |
           poetry run ruff check --output-format=github .
 
-      - name: Apply migrations
-        run: |
-          poetry run python manage.py migrate
-
+      # Отдельный migrate не нужен: тестовый раннер сам создаёт test БД и накатывает миграции
       - name: Run Django tests
         run: |
           poetry run python manage.py test

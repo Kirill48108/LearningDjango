@@ -1,8 +1,9 @@
 import os
-from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
+from datetime import timedelta
+
 
 load_dotenv(override=True)
 
@@ -74,12 +75,9 @@ DATABASES = {
         "PASSWORD": os.getenv("PASSWORD"),
         "HOST": os.getenv("HOST"),
         "PORT": os.getenv("PORT"),
-        "TEST": {
-            # Используем ту же БД для тестов, чтобы Django не пытался создавать test_<NAME>
-            "NAME": os.getenv("TEST_NAME", os.getenv("NAME")),
-        },
     }
 }
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
