@@ -9,9 +9,7 @@ from drf_spectacular.views import (
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
-    path(
-        "", RedirectView.as_view(url="/api/docs/", permanent=False)
-    ),  # корень → swagger
+    path("", RedirectView.as_view(url="/api/docs/", permanent=False)),  # корень → swagger
     path("admin/", admin.site.urls),
     path("materials/", include("materials.urls", namespace="materials")),
     path("users/", include("users.urls")),

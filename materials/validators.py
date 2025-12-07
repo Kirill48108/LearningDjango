@@ -52,9 +52,7 @@ class YouTubeOnlyValidator:
             "www.youtu.be",
         )
         if not any(host.endswith(d) for d in allowed):
-            raise serializers.ValidationError(
-                {self.field: "Допускаются только ссылки на YouTube."}
-            )
+            raise serializers.ValidationError({self.field: "Допускаются только ссылки на YouTube."})
 
     @property
     def __fields__(self):

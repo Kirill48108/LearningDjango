@@ -92,9 +92,7 @@ class PaymentCheckoutCreateAPIView(CreateAPIView):
         service = StripeService()
         try:
             product = service.create_product(name=target_name)
-            price = service.create_price(
-                product_id=product["id"], amount=payment.amount
-            )
+            price = service.create_price(product_id=product["id"], amount=payment.amount)
             session = service.create_checkout_session(price_id=price["id"])
         except Exception as e:
             return Response({"detail": f"Stripe error: {e}"}, status=400)

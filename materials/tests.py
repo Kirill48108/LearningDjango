@@ -23,9 +23,7 @@ class BaseSetupMixin:
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-        self.course = Well.objects.create(
-            name="Курс", description="desc", owner=self.user
-        )
+        self.course = Well.objects.create(name="Курс", description="desc", owner=self.user)
         self.lesson = Lesson.objects.create(
             course=self.course, title="Урок 1", description="D", owner=self.user
         )
@@ -77,16 +75,12 @@ class SubscriptionToggleTests(APITestCase, BaseSetupMixin):
         # add
         resp = self.client.post(url, data={"course_id": self.course.id}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertTrue(
-            Subscription.objects.filter(user=self.user, course=self.course).exists()
-        )
+        self.assertTrue(Subscription.objects.filter(user=self.user, course=self.course).exists())
 
         # remove
         resp = self.client.post(url, data={"course_id": self.course.id}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertFalse(
-            Subscription.objects.filter(user=self.user, course=self.course).exists()
-        )
+        self.assertFalse(Subscription.objects.filter(user=self.user, course=self.course).exists())
 
     def test_course_serializer_has_is_subscribed(self):
         Subscription.objects.create(user=self.user, course=self.course)

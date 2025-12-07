@@ -8,12 +8,8 @@ class StripeService:
             raise RuntimeError("STRIPE_API_KEY is not configured")
         stripe.api_key = settings.STRIPE_API_KEY
         self.currency = getattr(settings, "STRIPE_CURRENCY", "rub")
-        self.success_url = getattr(
-            settings, "STRIPE_SUCCESS_URL", "http://localhost:8000/success"
-        )
-        self.cancel_url = getattr(
-            settings, "STRIPE_CANCEL_URL", "http://localhost:8000/cancel"
-        )
+        self.success_url = getattr(settings, "STRIPE_SUCCESS_URL", "http://localhost:8000/success")
+        self.cancel_url = getattr(settings, "STRIPE_CANCEL_URL", "http://localhost:8000/cancel")
 
     def create_product(self, name: str) -> dict:
         product = stripe.Product.create(name=name)
