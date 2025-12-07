@@ -21,7 +21,6 @@ jobs:
           POSTGRES_PASSWORD: django
         ports:
           - "5432:5432"
-        # ждем, пока Postgres поднимется
         options: >-
           --health-cmd="pg_isready -U django -d learningdjango"
           --health-interval=5s
@@ -29,13 +28,11 @@ jobs:
           --health-retries=10
 
     env:
-      # настройки БД для Django (см. settings.DATABASES)
       DB_NAME: learningdjango
       DB_USER: django
       DB_PASSWORD: django
       DB_HOST: db
       DB_PORT: "5432"
-      TEST_NAME: learningdjango
       DEBUG: "True"
       SECRET_KEY: test_secret_key
 
@@ -57,12 +54,14 @@ jobs:
         run: |
           poetry install --with lint,dev
 
-      # 👇 НОВЫЙ ШАГ: Ожидаем запуска БД
+      # 👇 ИСПРАВЛЕННЫЙ ШАГ: Используем apt-get и curl для Ubuntu
       - name: Wait for PostgreSQL service
         run: |
-          # Устанавливаем утилиту ожидания и ждем 60 секунд
-          apk add --no-cache wait-for-it
-          wait-for-it "${DB_HOST}:${DB_PORT}" --timeout=60
+          sudo apt-get update
+          sudo apt-get install -y curl
+          curl -sSL github.com > wait-for-it.sh
+          chmod +x wait-for-it.sh
+          ./wait-for-it.sh "${DB_HOST}:${DB_PORT}" --timeout=60
 
       - name: Run black (check)
         run: |
@@ -76,21 +75,17 @@ jobs:
         run: |
           poetry run ruff check --output-format=github .
 
-      # 👇 НОВЫЙ ШАГ: Применяем миграции в тестовой БД
       - name: Apply Migrations
         run: |
           poetry run python manage.py migrate
 
       - name: Run Django tests
-        # Env vars NAME, USER, HOST и т.д. должны быть настроены в ваших settings.py
-        # для чтения из переменных окружения (os.environ)
         run: |
           poetry run python manage.py test
 
   deploy:
     needs: lint-and-test
     runs-on: ubuntu-latest
-    # деплой только на push в develop (не на PR)
     if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
 
     steps:
