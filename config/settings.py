@@ -74,9 +74,12 @@ DATABASES = {
         "PASSWORD": os.getenv("PASSWORD"),
         "HOST": os.getenv("HOST"),
         "PORT": os.getenv("PORT"),
+        "TEST": {
+            # Используем ту же БД для тестов, чтобы Django не пытался создавать test_<NAME>
+            "NAME": os.getenv("TEST_NAME", os.getenv("NAME")),
+        },
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
