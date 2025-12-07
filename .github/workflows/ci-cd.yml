@@ -54,7 +54,6 @@ jobs:
         run: |
           poetry install --with lint,dev
 
-      # 👇 ИСПРАВЛЕННЫЙ ШАГ: Полный URL восстановлен
       - name: Wait for PostgreSQL service
         run: |
           curl -o wait-for-it.sh -SL raw.githubusercontent.com
