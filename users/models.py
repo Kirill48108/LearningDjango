@@ -1,10 +1,42 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.conf import settings
-from materials.models import Well, Lesson
+from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models
+
+from materials.models import Lesson, Well
+
+
+class CustomUserManager(BaseUserManager):
+    """Кастомный менеджер пользователя с авторизацией по email."""
+
+    use_in_migrations = True
+
+    def _create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError("Email обязателен")
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
+        return self._create_user(email, password, **extra_fields)
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
+
+        return self._create_user(email, password, **extra_fields)
+
 
 class User(AbstractUser):
-
     username = None
 
     email = models.EmailField(
@@ -35,10 +67,11 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
+    objects = CustomUserManager()
+
     class Meta:
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
-
 
 
 class Payment(models.Model):
@@ -86,14 +119,19 @@ class Payment(models.Model):
         max_length=10,
         choices=PaymentMethod.choices,
         verbose_name="Способ оплаты",
-        help_text="Налмчные или перевод на счёт"
+        help_text="Налмчные или перевод на счёт",
     )
     # --- Stripe служебные поля ---
     stripe_product_id = models.CharField(max_length=100, blank=True, null=True)
     stripe_price_id = models.CharField(max_length=100, blank=True, null=True)
     stripe_session_id = models.CharField(max_length=100, blank=True, null=True)
     checkout_url = models.URLField(blank=True, null=True)
-    status = models.CharField(max_length=32, blank=True, null=True, help_text="Статус платежной сессии (optional)")
+    status = models.CharField(
+        max_length=32,
+        blank=True,
+        null=True,
+        help_text="Статус платежной сессии (optional)",
+    )
 
     class Meta:
         verbose_name = "Платеж"
@@ -102,4 +140,3 @@ class Payment(models.Model):
     def __str__(self) -> str:
         target = self.course or self.lesson
         return f"{self.user} -> {target} -> [{self.amount}] {self.paid_at}"
-

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 from .models import Payment
 
 User = get_user_model()
@@ -42,7 +43,6 @@ class UserPrivateSerializer(serializers.ModelSerializer):
         read_only_fields = ("is_active", "date_joined")
 
 
-
 class PaymentSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source="user.email", read_only=True)
     course_name = serializers.CharField(source="course.name", read_only=True)
@@ -74,7 +74,9 @@ class PaymentSerializer(serializers.ModelSerializer):
         if not course and not lesson:
             raise serializers.ValidationError("Нужно указать либо course, либо lesson.")
         if course and lesson:
-            raise serializers.ValidationError("Укажите только один объект оплаты: course или lesson.")
+            raise serializers.ValidationError(
+                "Укажите только один объект оплаты: course или lesson."
+            )
         return attrs
 
 
@@ -84,9 +86,18 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
     после чего создаётся product/price/session в Stripe.
     Требует указать РОВНО одно из полей: course ИЛИ lesson.
     """
+
     class Meta:
         model = Payment
-        fields = ("id", "user", "paid_at", "course", "lesson", "amount", "payment_method")
+        fields = (
+            "id",
+            "user",
+            "paid_at",
+            "course",
+            "lesson",
+            "amount",
+            "payment_method",
+        )
         read_only_fields = ("user",)
 
     def validate(self, attrs):
@@ -95,6 +106,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
         if not course and not lesson:
             raise serializers.ValidationError("Укажите либо course, либо lesson.")
         if course and lesson:
-            raise serializers.ValidationError("Укажите только один объект оплаты: course ИЛИ lesson.")
+            raise serializers.ValidationError(
+                "Укажите только один объект оплаты: course ИЛИ lesson."
+            )
         return attrs
-
