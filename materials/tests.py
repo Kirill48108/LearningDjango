@@ -1,13 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
 
-from materials.models import Well, Lesson, Subscription
+from materials.models import Lesson, Subscription, Well
 
 User = get_user_model()
-
 
 
 class BaseSetupMixin:
@@ -91,6 +90,7 @@ class SubscriptionToggleTests(APITestCase, BaseSetupMixin):
         self.assertIn("is_subscribed", resp.data)
         self.assertTrue(resp.data["is_subscribed"])
 
+
 class ModeratorPermissionsTests(APITestCase):
     def setUp(self):
         # Пользователи через create() + set_password()
@@ -119,7 +119,9 @@ class ModeratorPermissionsTests(APITestCase):
         self.other_client = APIClient()
         self.other_client.force_authenticate(self.other)
 
-        self.course_owner = Well.objects.create(name="OwnerCourse", description="d", owner=self.owner)
+        self.course_owner = Well.objects.create(
+            name="OwnerCourse", description="d", owner=self.owner
+        )
         self.lesson_owner = Lesson.objects.create(
             course=self.course_owner, title="L", description="D", owner=self.owner
         )
@@ -132,7 +134,9 @@ class ModeratorPermissionsTests(APITestCase):
         self.assertGreaterEqual(resp.data.get("count", 0), 1)
 
         # create запрещен
-        resp = self.moder_client.post(list_url, data={"name": "X", "description": "d"}, format="json")
+        resp = self.moder_client.post(
+            list_url, data={"name": "X", "description": "d"}, format="json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
         # patch разрешен
@@ -161,13 +165,16 @@ class ModeratorPermissionsTests(APITestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(len(resp.data.get("results", [])), 5)
 
-
     def test_pagination_lessons(self):
         for i in range(12):
-            Lesson.objects.create(course=self.course_owner, title=f"L{i}", description="d", owner=self.owner)
+            Lesson.objects.create(
+                course=self.course_owner,
+                title=f"L{i}",
+                description="d",
+                owner=self.owner,
+            )
         list_url = reverse("materials:lesson-list-create")
         resp = self.owner_client.get(list_url, {"page": 2, "page_size": 10})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         # Изначально 1 урок + 12 новых = 13; на 2-й странице (page_size=10) должно быть 3
         self.assertEqual(len(resp.data.get("results", [])), 3)
-

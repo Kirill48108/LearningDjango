@@ -1,6 +1,7 @@
 import stripe
 from django.conf import settings
 
+
 class StripeService:
     def __init__(self):
         if not settings.STRIPE_API_KEY:

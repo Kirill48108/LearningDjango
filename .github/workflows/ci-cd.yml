@@ -1,0 +1,118 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          # Служебная БД, Django сам создаст test_<NAME>
+          POSTGRES_DB: postgres
+          POSTGRES_USER: django
+          POSTGRES_PASSWORD: django
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd="pg_isready -U django -d postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      # Эти имена читает settings.DATABASES
+      NAME: learningdjango
+      USER: django
+      PASSWORD: django
+      HOST: localhost      # код крутится на хосте раннера, не в docker-сети
+      PORT: "5432"
+      # НЕ задаём TEST_NAME, чтобы Django создал test_learningdjango сам
+
+      DEBUG: "True"
+      SECRET_KEY: test_secret_key
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies (including lint/test)
+        run: |
+          poetry install --with lint,dev
+
+      - name: Run black (check)
+        run: |
+          poetry run black --check .
+
+      - name: Run isort (check)
+        run: |
+          poetry run isort --check-only .
+
+      - name: Run Ruff (check)
+        run: |
+          poetry run ruff check --output-format=github .
+
+      # Отдельный migrate не нужен: тестовый раннер сам создаёт test БД и накатывает миграции
+      - name: Run Django tests
+        run: |
+          poetry run python manage.py test
+
+  deploy:
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Deploy to remote server via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -e
+
+            APP_DIR=/opt/LearningDjango
+
+            if [ ! -d "$APP_DIR" ]; then
+              echo "Project directory not found, cloning..."
+              sudo mkdir -p "$APP_DIR"
+              sudo chown -R $USER:$USER "$APP_DIR"
+              git clone ${{ github.repository_url }} "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+
+            echo "Pull latest changes..."
+            git fetch origin
+            git reset --hard origin/develop
+
+            echo "Build and run containers..."
+            docker compose up --build -d
+
+            echo "Apply migrations..."
+            docker compose exec -T web python manage.py migrate
+
+            echo "Deployment finished."

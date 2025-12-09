@@ -1,9 +1,7 @@
 from rest_framework import serializers
 
-from materials.models import Lesson, Well
+from materials.models import Lesson, Subscription, Well
 from materials.validators import YouTubeOnlyValidator
-from materials.models import Subscription
-
 
 
 class LessonShortSerializer(serializers.ModelSerializer):
@@ -32,9 +30,8 @@ class WellSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if not request or not request.user or not request.user.is_authenticated:
             return False
-        from materials.models import Subscription
-        return Subscription.objects.filter(user=request.user, course=obj).exists()
 
+        return Subscription.objects.filter(user=request.user, course=obj).exists()
 
 
 class LessonSerializer(serializers.ModelSerializer):

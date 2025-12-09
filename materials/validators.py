@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
-from rest_framework import serializers
 
+from rest_framework import serializers
 
 
 def validate_youtube_url(value: str):
@@ -14,7 +14,13 @@ def validate_youtube_url(value: str):
     except Exception:
         raise serializers.ValidationError("Некорректный URL.")
     host = (parsed.netloc or "").lower()
-    allowed = ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be")
+    allowed = (
+        "youtube.com",
+        "www.youtube.com",
+        "m.youtube.com",
+        "youtu.be",
+        "www.youtu.be",
+    )
     if not any(host.endswith(d) for d in allowed):
         raise serializers.ValidationError("Допускаются только ссылки на YouTube.")
     return value
@@ -38,7 +44,13 @@ class YouTubeOnlyValidator:
         except Exception:
             raise serializers.ValidationError({self.field: "Некорректный URL."})
         host = (parsed.netloc or "").lower()
-        allowed = ("youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be")
+        allowed = (
+            "youtube.com",
+            "www.youtube.com",
+            "m.youtube.com",
+            "youtu.be",
+            "www.youtu.be",
+        )
         if not any(host.endswith(d) for d in allowed):
             raise serializers.ValidationError({self.field: "Допускаются только ссылки на YouTube."})
 

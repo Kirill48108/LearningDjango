@@ -1,16 +1,16 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
 
-from .models import Well, Lesson, Subscription
-from .serializers import WellSerializer, LessonSerializer
-from .permissions import IsModer, IsOwnerOrReadWriteOwn, DenyCreateDeleteForModer
+from .models import Lesson, Subscription, Well
 from .paginators import CoursePagination, LessonPagination
+from .permissions import DenyCreateDeleteForModer, IsModer, IsOwnerOrReadWriteOwn
+from .serializers import LessonSerializer, WellSerializer
 
 
 # Список/создание курсов
@@ -28,6 +28,7 @@ class WellListCreateAPIView(ListAPIView, CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
 
 # Детально курс
 class WellRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
@@ -51,10 +52,12 @@ class LessonListCreateAPIView(ListAPIView, CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class LessonRetrieveUpdateDestroyAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = LessonSerializer
     permission_classes = [DenyCreateDeleteForModer & (IsModer | IsOwnerOrReadWriteOwn)]
     queryset = Lesson.objects.select_related("course").all()
+
 
 # Управление подпиской (toggle)
 class SubscriptionToggleAPIView(APIView):
@@ -74,4 +77,3 @@ class SubscriptionToggleAPIView(APIView):
             message = "подписка добавлена"
 
         return Response({"message": message})
-

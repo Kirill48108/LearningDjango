@@ -1,10 +1,9 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.urls import reverse
-from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
+from rest_framework.test import APIClient, APITestCase
 
-from materials.models import Well, Lesson
+from materials.models import Lesson, Well
 from users.models import Payment
 
 User = get_user_model()
@@ -29,7 +28,11 @@ class UsersAuthProfilesTests(APITestCase):
 
     def test_registration(self):
         url = reverse("register")
-        data = {"email": "new@example.com", "password": "StrongPass1!", "first_name": "New"}
+        data = {
+            "email": "new@example.com",
+            "password": "StrongPass1!",
+            "first_name": "New",
+        }
         resp = self.client.post(url, data=data, format="json")
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
         self.assertTrue(User.objects.filter(email="new@example.com").exists())
@@ -37,7 +40,11 @@ class UsersAuthProfilesTests(APITestCase):
     def test_jwt_obtain_and_refresh(self):
         obtain = reverse("token_obtain_pair")
         refresh = reverse("token_refresh")
-        resp = self.client.post(obtain, data={"email": "u1@example.com", "password": "pass12345"}, format="json")
+        resp = self.client.post(
+            obtain,
+            data={"email": "u1@example.com", "password": "pass12345"},
+            format="json",
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertIn("access", resp.data)
         self.assertIn("refresh", resp.data)
@@ -77,6 +84,7 @@ class UsersAuthProfilesTests(APITestCase):
         resp = self.client_u1.post(url, data={"email": "x@x.x", "password": "123"}, format="json")
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
+
 class PaymentsListFilterOrderingTests(APITestCase):
     def setUp(self):
         # Создаём пользователей через create() + set_password()
@@ -92,15 +100,23 @@ class PaymentsListFilterOrderingTests(APITestCase):
         self.client_u1.force_authenticate(self.user)
 
         self.course = Well.objects.create(name="Course A", description="d", owner=self.user)
-        self.lesson = Lesson.objects.create(course=self.course, title="Lesson A", description="d", owner=self.user)
+        self.lesson = Lesson.objects.create(
+            course=self.course, title="Lesson A", description="d", owner=self.user
+        )
 
         Payment.objects.create(
-            user=self.user, course=self.course, amount="100.00", payment_method="cash",
-            paid_at="2025-01-01T10:00:00Z"
+            user=self.user,
+            course=self.course,
+            amount="100.00",
+            payment_method="cash",
+            paid_at="2025-01-01T10:00:00Z",
         )
         Payment.objects.create(
-            user=self.user, lesson=self.lesson, amount="50.00", payment_method="bank",
-            paid_at="2025-01-02T10:00:00Z"
+            user=self.user,
+            lesson=self.lesson,
+            amount="50.00",
+            payment_method="bank",
+            paid_at="2025-01-02T10:00:00Z",
         )
 
     def test_list_and_filter(self):
