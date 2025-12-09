@@ -2,9 +2,9 @@
 # LearningDjango
 
 Учебный проект на Django + DRF с авторизацией через JWT, оплатами через Stripe и асинхронными задачами на Celery.  
-Проект упакован в Docker и использует PostgreSQL и Redis.
+Проект упакован в Docker и использует PostgreSQL и Redis. Настроен автодеплой на VPS через GitHub Actions.
 
-
+---
 
 ## Стек
 
@@ -17,114 +17,114 @@
 - **Stripe**
 - **Gunicorn**
 - **Docker / Docker Compose**
+- **GitHub Actions (CI/CD)**
 
-
+---
 
 ## Основной функционал
 
-Кратко, что делает приложение (заполни по своему ТЗ, здесь пример):
+- Пользователи (`users`):
+  - регистрация, аутентификация (JWT через SimpleJWT, кастомная модель `users.User` с логином по email);
+  - управление профилем.
+- Материалы (`materials`):
+  - курсы и уроки;
+  - пагинация, фильтрация, поиск;
+  - права доступа и подписки на курсы.
+- Платежи (`users.Payment`):
+  - оплата курсов и уроков;
+  - интеграция со Stripe (Checkout Session, product/price).
+- Документация API через **drf-spectacular**:
+  - OpenAPI схема, Swagger UI, ReDoc.
+- Фоновые задачи Celery (пример: `materials.tasks.test_task`).
 
-- Регистрация и аутентификация пользователей (кастомная модель `users.User`).
-- Работа с учебными материалами (`materials`):
-  - список и детальный просмотр;
-  - фильтрация и поиск;
-  - права доступа.
-- Оплата доступа к материалам через Stripe:
-  - создание сессий Checkout;
-  - обработка успешной/отменённой оплаты.
-- Документация API через **drf-spectacular** (OpenAPI/Swagger).
-- Асинхронные фоновые задачи на Celery.
+---
 
+## 1. Установка и запуск локально через Docker
 
-
-## Установка и запуск
-
-### 1. Клонирование репозитория
-
+### 1.1. Клонирование репозитория
+```
 
 bash git clone <URL_вашего_репозитория>.git cd LearningDjango```
 
-### 2. Подготовка `.env`
+### 1.2. Подготовка `.env`
 
-В репозитории есть шаблон `.env.sample`.  
-Создайте на его основе рабочий `.env`:
+В репозитории есть шаблон `.env.sample`. Создайте `.env`:
+```
 
+bash cp .env.sample .env``` 
 
-bash cp .env.sample .env
-
-Заполните переменные окружения. Пример (минимально необходимый):
-
+Пример минимального `.env` для локального запуска в Docker:
+```
 
 env DEBUG=True SECRET_KEY=ваш_случайный_secret_key
-Настройки БД для Django (config/settings.py)
+Настройки БД для Django и Postgres
 NAME=learningdjango USER=django PASSWORD=your_password HOST=db PORT=5432
 Для Celery / Redis
 CELERY_BROKER_URL=redis://redis:6379/0 CELERY_RESULT_BACKEND=redis://redis:6379/1
-(опционально) список разрешённых хостов
+Разрешённые хосты
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 Stripe
 STRIPE_API_KEY=sk_test_ваш_ключ STRIPE_SUCCESS_URL=http://localhost:8000/stripe/success/ STRIPE_CANCEL_URL=http://localhost:8000/stripe/cancel/```
 
-> `SECRET_KEY` можно сгенерировать так:
-> bash
-> python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+Сгенерировать `SECRET_KEY`:
+```
 
+bash python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"``` 
 
-### 3. Запуск в Docker
+### 1.3. Запуск в Docker
+```
 
-Убедитесь, что Docker и Docker Compose установлены и запущен docker‑daemon.
+bash docker compose up --build```
 
-Собрать и поднять все сервисы:
+Сервисы:
 
+- `web` — Django + Gunicorn (`http://localhost:8000/`);
+- `db` — PostgreSQL;
+- `redis` — Redis;
+- `worker` — Celery worker;
+- `beat` — Celery beat.
 
-bash docker compose up --build``` 
+Остановить:
+```
 
-Будут запущены:
+bash docker compose down``` 
 
-- `web` — Django + Gunicorn (`http://localhost:8000/`)
-- `db` — PostgreSQL
-- `redis` — Redis
-- `worker` — Celery worker
-- `beat` — Celery beat
+### 1.4. Миграции и суперпользователь
 
-Остановить контейнеры:
+Миграции выполняются автоматически при старте `web`:
+```
 
+bash docker compose exec web python manage.py createsuperuser```
 
-bash docker compose down```
+---
 
-#### Миграции и суперпользователь
+## 2. Запуск без Docker (через Poetry)
 
-Миграции выполняются автоматически при старте `web` (в команде контейнера).
+1. Установить Poetry.
+2. Установить зависимости:
 
-Создать суперпользователя:
-
-
-bash docker compose exec web python manage.py createsuperuser``` 
-
-
-
-## Запуск без Docker (локально, через Poetry)
-
-1. Установите Poetry.
-2. Установите зависимости:
-
-   bash
+   ```bash
    poetry install
-   
+   ```
 
-3. Создайте и заполните `.env` (как выше), но в этом случае:
-    - `HOST=localhost`
-    - PostgreSQL и Redis должны быть установлены и запущены локально.
+3. В `.env` для локального запуска без Docker:
 
-4. Запуск сервера:
+   ```env
+   HOST=localhost
+   PORT=5432
+   ```
 
-   bash
+   и локально должны быть запущены Postgres и Redis.
+
+4. Запуск:
+
+   ```bash
    poetry run python manage.py migrate
-   poetry run python manage.py runserver
-   
+   poetry run python manage.py runserver 0.0.0.0:8000
+   ```
 
 Celery локально:
-
+```
 
 bash
 worker
@@ -132,61 +132,58 @@ poetry run celery -A config worker -l info
 beat
 poetry run celery -A config beat -l info``` 
 
+---
 
+## 3. Структура проекта
+```
 
-## Структура проекта
+text LearningDjango/ ├─ config/ # Настройки Django, urls, wsgi, asgi, celery ├─ materials/ # Приложение с учебными материалами ├─ users/ # Приложение с пользователями и платежами ├─ manage.py ├─ Dockerfile ├─ docker-compose.yml ├─ pyproject.toml ├─ .env.sample └─ README.MD```
 
+---
 
-text LearningDjango/ ├─ config/ # Настройки Django, urls, wsgi, celery ├─ materials/ # Приложение с учебными материалами ├─ users/ # Приложение с пользователями (кастомная модель User) ├─ manage.py ├─ Dockerfile ├─ docker-compose.yml ├─ pyproject.toml ├─ .env.sample └─ README.MD```
-
-
-
-## API и авторизация
+## 4. API и авторизация
 
 ### Основные URL
 
+(по умолчанию в Docker локально и на VPS — порт 8000)
+
 - Админ‑панель:  
-  `http://localhost:8000/admin/`
+  `http://<host>:8000/admin/`
 
-- Материалы (точные пути — в `materials/urls.py`):  
-  `http://localhost:8000/materials/…`
+- Материалы:  
+  `http://<host>:8000/materials/…`
 
-- Пользователи (точные пути — в `users/urls.py`):  
-  `http://localhost:8000/users/…`
+- Пользователи:  
+  `http://<host>:8000/users/…`
 
-### JWT‑аутентификация (SimpleJWT)
+### JWT (SimpleJWT)
 
-- Получение пары токенов (access + refresh):  
+- Получение токенов:  
   `POST /api/auth/token/`
-
-- Обновление access‑токена по refresh:  
+- Обновление access‑токена:  
   `POST /api/auth/token/refresh/`
 
-Пример запроса на получение токена:
-
+Пример запроса:
+```
 
 http POST /api/auth/token/ Content-Type: application/json
 { "email": "user@example.com", "password": "password" }``` 
 
-(Если используется логин по username — укажи нужное поле вместо `email`.)
-
-В ответ придёт:
-
+Ответ:
+```
 
 json { "access": "…", "refresh": "…" }```
 
-Дальше во всех защищённых эндпоинтах передаём:
+Заголовок для авторизованных запросов:
+```
 
+http Authorization: Bearer <access_token>``` 
 
-http Authorization: Bearer``` 
+---
 
--
+## 5. Документация API
 
-## Документация API
-
-Проект использует **drf-spectacular**. Доступные эндпоинты документации:
-
-- JSON‑схема OpenAPI:  
+- OpenAPI схема (JSON):  
   `GET /api/schema/`
 
 - Swagger UI:  
@@ -195,70 +192,191 @@ http Authorization: Bearer```
 - ReDoc:  
   `GET /api/redoc/`
 
+---
 
+## 6. Celery и Redis
 
-## Celery и Redis
+В `config/settings.py`:
 
-В `config/settings.py` используются переменные окружения:
+- `CELERY_BROKER_URL` — URL брокера (Redis),
+- `CELERY_RESULT_BACKEND` — backend результатов (Redis).
 
-- `CELERY_BROKER_URL` — URL брокера сообщений (Redis).
-- `CELERY_RESULT_BACKEND` — backend для хранения результатов.
+В `config/celery.py` настроено приложение Celery, автоматически находящее `tasks.py` во всех приложениях.
 
-В `config/celery.py` настроено Celery‑приложение, которое автоматически находит `tasks.py` во всех Django‑приложениях.
+Пример задачи (`materials/tasks.py`):
+```
 
-Пример проверки работоспособности Celery:
+python from celery import shared_task
+@shared_task def test_task(): print("Celery работает!")```
 
+Проверка в Docker:
+```
 
 bash docker compose exec web python manage.py shell
-from materials.tasks import example_task example_task.delay()```
+from materials.tasks import test_task test_task.delay()``` 
 
 Логи воркера:
+```
 
-
-bash docker compose logs worker``` 
-
-
-
-## Stripe
-
-Для работы Stripe нужны переменные окружения:
-
-- `STRIPE_API_KEY` — секретный ключ (в личном кабинете Stripe:  
-  **Developers → API keys → Secret key** — тестовый ключ вида `sk_test_...`).
-- `STRIPE_SUCCESS_URL` — URL, куда пользователь попадёт после успешной оплаты.
-- `STRIPE_CANCEL_URL` — URL, куда попадёт при отмене оплаты.
-
-Пример конфигурации в `.env`:
-
-
-env STRIPE_API_KEY=sk_test_... STRIPE_SUCCESS_URL=http://localhost:8000/stripe/success/ STRIPE_CANCEL_URL=http://localhost:8000/stripe/cancel/```
+bash docker compose logs worker```
 
 ---
 
-## Тесты и покрытие
+## 7. Развёртывание на VPS по IP
 
-(Если у тебя уже есть тесты — опиши здесь, как их запускать. Пример:)
+### 7.1. Настройка сервера
 
+На VPS (Ubuntu):
+```
+
+bash sudo apt update sudo apt install -y docker.io docker-compose-plugin git sudo systemctl enable docker sudo systemctl start docker sudo usermod -aG docker $USER
+затем выйти и зайти снова``` 
+
+Клонировать проект:
+```
+
+bash sudo mkdir -p /opt/LearningDjango sudo chown -R USER:USER /opt/LearningDjango cd /opt/LearningDjango git clone <URL_репозитория> .```
+
+Подготовить `.env` (пример для боевого/тестового сервера):
+```
+
+env DEBUG=False SECRET_KEY=боевой_secret_key
+NAME=learningdjango USER=root PASSWORD=django HOST=db PORT=5432
+CELERY_BROKER_URL=redis://redis:6379/0 CELERY_RESULT_BACKEND=redis://redis:6379/1
+DJANGO_ALLOWED_HOSTS=<IP_вашего_VPS>,localhost,127.0.0.1
+STRIPE_API_KEY=sk_live_или_test STRIPE_SUCCESS_URL=http://<IP_вашего_VPS>:8000/stripe/success/ STRIPE_CANCEL_URL=http://<IP_вашего_VPS>:8000/stripe/cancel/``` 
+
+Запуск:
+```
+
+bash cd /opt/LearningDjango docker compose up -d```
+
+Если включён UFW:
+```
+
+bash sudo ufw default deny incoming sudo ufw default allow outgoing sudo ufw allow 22/tcp sudo ufw allow 8000/tcp sudo ufw enable sudo ufw status``` 
+
+Теперь приложение доступно по:
+
+- `http://<IP_вашего_VPS>:8000/`
+- `http://<IP_вашего_VPS>:8000/admin/`
+- `http://<IP_вашего_VPS>:8000/api/docs/`
+
+---
+
+## 8. CI/CD (GitHub Actions)
+
+Workflow находится в `.github/workflows/ci-cd.yml`.
+
+### Триггеры
+```
+
+yaml on: push: branches: - develop pull_request: branches: - develop```
+
+### Job `lint-and-test`
+
+- Поднимает сервис Postgres (`services.db`).
+- Устанавливает зависимости через Poetry (`poetry install --with lint,dev`).
+- Запускает:
+    - `black --check .`
+    - `isort --check-only .`
+    - `ruff check .`
+    - `python manage.py test`
+
+При ошибках линтера/тестов деплой не выполняется.
+
+### Job `deploy`
+```
+
+yaml deploy: needs: lint-and-test runs-on: ubuntu-latest if: github.ref == 'refs/heads/develop' && github.event_name == 'push'``` 
+
+- Срабатывает **только** при `push` в `develop` (не на PR).
+- Подключается по SSH к VPS (используются секреты:
+  - `SSH_HOST` — IP сервера,
+  - `SSH_USER` — пользователь,
+  - `SSH_PORT` — порт SSH,
+  - `SSH_PRIVATE_KEY` — приватный ключ для деплоя).
+- На сервере:
+
+  ```bash
+  APP_DIR=/opt/LearningDjango
+
+  if [ ! -d "$APP_DIR" ]; then
+    sudo mkdir -p "$APP_DIR"
+    sudo chown -R $USER:$USER "$APP_DIR"
+    git clone <URL_репозитория> "$APP_DIR"
+  fi
+
+  cd "$APP_DIR"
+  git fetch origin
+  git reset --hard origin/develop
+  docker compose up --build -d
+  docker compose exec -T web python manage.py migrate
+  ```
+
+Таким образом:
+
+- при коммите в любую ветку `feature/*` можно создать PR в `develop` → будут прогнаны линтеры и тесты (без деплоя);
+- при merge/пуше в `develop` выполняется полный деплой на VPS.
+
+---
+
+## 9. Процесс работы с ветками и PR
+
+1. Локально:
+
+   ```bash
+   git checkout -b feature/hw-deploy
+   # работаешь над задачей
+   git push origin feature/hw-deploy
+   ```
+
+2. В GitHub создаёшь Pull Request `feature/hw-deploy → develop`.
+
+3. GitHub Actions запускает `lint-and-test` (проверки кода и тесты).
+
+4. Наставник проверяет PR и CI. Если всё ок — мержит в `develop`.
+
+5. При merge (push в `develop`) запускается `deploy`, который обновляет код на VPS и перезапускает Docker‑сервисы.
+
+---
+
+## 10. Полезные команды
 
 bash
-В Docker
-docker compose exec web coverage run manage.py test docker compose exec web coverage html``` 
-
-Или локально через Poetry:
-
-
-bash poetry run coverage run manage.py test poetry run coverage html```
-
-
-
-## Полезные команды
-
-
-bash
-Логи всех сервисов
+# Логи всех сервисов
 docker compose logs
-Логи конкретного сервиса
+# Логи конкретного сервиса
 docker compose logs web docker compose logs db docker compose logs worker docker compose logs beat
-Войти в контейнер web
-docker compose exec web bash``` 
+# Войти в контейнер web
+docker compose exec web bash
+# Применить миграции
+docker compose exec web python manage.py migrate
+# Проверить состояние контейнеров
+docker compose ps
 
+
+## Что сделано по критериям ДЗ
+
+1. **Удалённый сервер**
+   - VPS на Ubuntu, установлен Docker + docker-compose-plugin.
+   - Проект развернут в `/opt/LearningDjango`.
+   - Приложение доступно по IP: `http://141.105.71.201:8000/`.
+   - UFW: открыт 22 и 8000, остальное закрыто. Доступ по SSH по ключу.
+
+2. **Docker**
+   - Написан Dockerfile (Python 3.13 + Poetry + Gunicorn).
+   - Настроен `docker-compose.yml` с сервисами: `web`, `db`, `redis`, `worker`, `beat`.
+
+3. **CI/CD (GitHub Actions)**
+   - Файл `.github/workflows/ci-cd.yml`.
+   - При push/PR в `develop` запускаются линтеры (`black`, `isort`, `ruff`) и тесты.
+   - При push в `develop` после успешных тестов выполняется автодеплой на VPS:
+     - `git reset --hard origin/develop`,
+     - `docker compose up --build -d`,
+     - `python manage.py migrate`.
+
+4. **Переменные окружения и Secrets**
+   - Шаблон `.env.sample` в репозитории.
+   - В CI используются Secrets: `SSH_HOST`, `SSH_USER`, `SSH_PORT`, `SSH_PRIVATE_KEY`.
+   - `.env` добавлен в `.gitignore` и не попадает в репозиторий.
